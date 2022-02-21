@@ -173,6 +173,90 @@ swap_rows: #takes in the address of the rows you want to swap and swaps them.
 # COPYFROMHERE - DO NOT REMOVE THIS LINE
 sort_by_row: 
     # a0 stores the array address, a1 and a2 store the size of row and column respectively
+    
+    move $t0, $a0     # $t0 = array address
 
+    addi $sp, $sp, -20
+    sw $s0, 0($sp) 
+    sw $s1, 4($sp)
+    sw $s2, 8($sp)
+    sw $s3, 12($sp)
+    sw $ra, 16($sp)
+
+    li $t1, 0         # $t1 = i
+    li $t2, 0         # $t2 = j
+LoopOuter:
+    li $t2, 0 #reset j
+
+LoopInner:
+    mult $t2, $a2 
+    mflo $t4              
+    sll $t4, $t4, 2       
+    add $t4, $t4, $t0     # first row
+    sll $t6, $a2, 2
+    add $t6, $t4, $t6     # next row
+
+    move $s0, $t0   # SAVE
+    move $s1, $t1
+    move $s2, $t2
+    move $s3, $t3
+    move $s4, $t4
+    move $s5, $a1
+    move $s6, $t6
+    move $s7, $a2
+    move $a0, $t4   # Set Up Parameters
+    jal average_row 
+    move $t5 $v0    # Average of first row
+    move $a0, $t6   # Set Up Parameters
+    jal average_row 
+    move $t7, $v0   # Average of next row
+    move $t0, $s0   # RESTORE
+    move $t1, $s1
+    move $t2, $s2
+    move $t3, $s3
+    move $t4, $s4
+    move $a1, $s5
+    move $t6, $s6
+    move $a2, $s7
+
+    ble $t5, $t7 ELSE
+
+    move $s0, $t0   # SAVE
+    move $s1, $t1
+    move $s2, $t2
+    move $s3, $t3
+    move $s4, $t4
+    move $s5, $a1
+    move $s6, $t6
+    move $s7, $a2
+    move $a0, $t4   # Set Up Parameters
+    move $a1, $t6   # Set Up Parameters
+    jal swap_rows   # SWAPPED
+    move $t0, $s0   # RESTORE
+    move $t1, $s1
+    move $t2, $s2
+    move $t3, $s3
+    move $t4, $s4
+    move $a1, $s5
+    move $t6, $s6
+    move $a2, $s7
+
+ELSE:
+    sub $t3, $a1, $t1
+    addi $t3, $t3, -1
+    addi $t2, $t2, 1
+    blt $t2, $t3, LoopInner
+
+    # LoopOuter Again
+    addi $t1, $t1, 1      #iterate i
+    addi $t9, $a1, -1 
+    blt $t1, $t9, LoopOuter
+            
+    lw $s0, 0($sp) 
+    lw $s1, 4($sp) 
+    lw $s2, 8($sp) 
+    lw $s3, 12($sp)
+    lw $ra, 16($sp)
+    addiu $sp, $sp, 20
     # Do not remove this line
     jr $ra
